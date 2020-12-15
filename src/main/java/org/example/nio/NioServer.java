@@ -68,6 +68,7 @@ public class NioServer {
 
         @Override
         public void run() {
+            System.out.println("Starting ClientConnectionHandler thread");
             while(true) {
                 try {
                     selector.select();
