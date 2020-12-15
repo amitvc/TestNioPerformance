@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class TestHarness {
     private static Logger log;
     private static final int PORT = 9000;
-    public static final int NO_OF_CLIENTS = 10000;
+    public static final int NO_OF_CLIENTS = 10;
     private final AtomicInteger threadCount = new AtomicInteger(0);
     private CompletableFuture<Void> clientThreads[];
     private ExecutorService service = Executors.newFixedThreadPool(
@@ -62,10 +62,10 @@ public class TestHarness {
                 while(i < Server.MESSAGE_CNT) {
                     Thread.sleep(ThreadLocalRandom.current().nextInt(0,1000));
                     if (counter.get() >= NO_OF_CLIENTS) {
-                        out.println(UUID.randomUUID() + " - "+ Thread.currentThread().getName()) ;
+                        out.println(UUID.randomUUID() + " - "+ Thread.currentThread().getName());
                         String input = null;
                         while(in.ready() && (input = in.readLine()) != null) {
-                            //log.info("Received message from server " + input);
+                            System.out.println("Received message from server " + input);
                             i++;
                         }
                     }

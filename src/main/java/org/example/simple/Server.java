@@ -12,34 +12,29 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Logger;
 
 public class Server {
-    private static Logger log;
-    private static final int PORT = 9000;
-    public static final int MESSAGE_CNT = 1000;
-    private AtomicInteger messageCounter = new AtomicInteger(0);
-    static {
-        log = Logger.getLogger(Server.class.getName());
-        log.addHandler(new ConsoleHandler());
-    }
 
-    public void init() throws IOException {
-        log.info("Inializing the server at port "+ PORT);
+    public static final int PORT = 9000;
+    public static final int MESSAGE_CNT = 5;
+    private AtomicInteger messageCounter = new AtomicInteger(0);
+
+
+    public void oneThreadPerConnection() throws IOException {
+        System.out.println("Inializing the server at port "+ PORT);
         ServerSocket ss =  new ServerSocket(PORT);
 
         while(true) {
             Socket clientSocket = ss.accept();
-            log.info("Accepted new client connection "+ clientSocket.getInetAddress().getCanonicalHostName());
+            System.out.println("Accepted new client connection "+ clientSocket.getInetAddress().getCanonicalHostName());
             new Thread(new ClientConnectionHandler(clientSocket, messageCounter)).start();
         }
     }
 
-    public void init2() throws Exception {
-        log.info("Inializing the server at port "+ PORT);
+    public void initWithThreadPool() throws Exception {
+        System.out.println("Inializing the server at port "+ PORT);
         ServerSocket ss =  new ServerSocket(PORT);
-        ExecutorService service = Executors.newFixedThreadPool(5000);
+        ExecutorService service = Executors.newCachedThreadPool();
         int clientConnectionCount = 0;
         while(true) {
             Socket clientSocket = ss.accept();
@@ -47,9 +42,9 @@ public class Server {
                 clientConnectionCount++;
             }
 
-            log.info("Accepted new client connection "+ clientSocket.getInetAddress().getCanonicalHostName());
+            System.out.println("Accepted new client connection "+ clientSocket.getInetAddress().getCanonicalHostName());
             if (clientConnectionCount >= TestHarness.NO_OF_CLIENTS) {
-                log.info("Finished connecting "+ TestHarness.NO_OF_CLIENTS + " clients");
+                System.out.println("Finished connecting "+ TestHarness.NO_OF_CLIENTS + " clients");
             }
 
             service.submit(new ClientConnectionHandler(clientSocket, messageCounter));
@@ -81,7 +76,7 @@ public class Server {
                     out.println(inputLine);
 
                     if (messageCounter.getAndIncrement() % 100000 == 0) {
-                        log.info("Received "+ messageCounter.get() + " messages so far " + new Date().toString());
+                        System.out.println("Received "+ messageCounter.get() + " messages so far " + new Date().toString());
                     }
                     i++;
                 }
@@ -101,6 +96,20 @@ public class Server {
 
     public static void main(String args[]) throws Exception {
         Server s = new Server();
-        s.init2();
+        if (args.length == 0) {
+            System.out.println("Please pass in parameter to indicate either thread/client(1) model or threadpool(2) model");
+            System.exit(1);
+        }
+
+        int option = Integer.parseInt(args[0].trim());
+
+        if (option == 1) {
+            s.oneThreadPerConnection();
+        } else if (option == 2) {
+            s.initWithThreadPool();
+        } else {
+            System.out.println("Please use option 1 or 2 to start the server");
+            System.exit(1);
+        }
     }
 }
